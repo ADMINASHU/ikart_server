@@ -1,9 +1,8 @@
-import express  from 'express';
+import express from "express";
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  res.send("welcome on ikart server home page");
+  res.send("welcome on iKart server home page");
 });
-
 
 export default router;
