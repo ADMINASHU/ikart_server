@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 router.get("/", (req, res) => {
-  res.send({msg:"welcome on iKart server home page"});
+  res.send({ msg: "welcome on iKart server home page" });
 });
 
 router.get("/product", async (req, res) => {
@@ -29,11 +29,8 @@ router.post("/product", async (req, res) => {
   }
 });
 
-
-
-
 router.post("/signup", async (req, res) => {
-  const { uname, email, password, cPassword } = req.body;
+  const { uname, email, password, cPassword, role } = req.body;
   if (!uname || !email || !password || !cPassword)
     return res.status(400).json({ error: "please fill all field" });
   if (password != cPassword)
@@ -41,7 +38,12 @@ router.post("/signup", async (req, res) => {
   try {
     const userExist = await userModel.findOne({ uname: uname });
     if (userExist) return res.status(409).json({ error: "User already exist" });
-    const user = new userModel({ uname, email, password });
+    const user = new userModel({
+      uname,
+      email,
+      password,
+      role,
+    });
     await user.save();
     res.status(201).json({ msg: "User registered successfully" });
   } catch (error) {
@@ -76,7 +78,9 @@ router.post("/signin", async (req, res) => {
           await userModel.findByIdAndUpdate(
             { _id: id },
             {
-              $set: { token: refreshToken },
+              $set: {
+                token: refreshToken,
+              },
             },
             {
               new: true,
@@ -100,8 +104,9 @@ router.post("/signin", async (req, res) => {
       res.status(200).json({
         username: dbUser.uname,
         email: dbUser.email,
-        role: dbUser.token,
+        role: dbUser.role,
         accessToken: accessToken,
+        seller: dbUser.seller,
       });
     } else {
       res.status(401).json({ error: "invalid credentials" });
@@ -112,6 +117,63 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+router.post("/seller", async (req, res) => {
+  try {
+    const { uname, role, gstin, line1, line2, line3, city, state, pincode } =
+      req.body;
+    const dbUser = await userModel.findOne({ uname: uname });
+    // console.log(dbUser);
+    const updateUser = async (id) => {
+      try {
+        await userModel.findByIdAndUpdate(
+          { _id: id },
+          {
+            $set: {
+              role: role,
+              seller: {
+                gstin: gstin,
+                address: {
+                  line1: line1,
+                  line2: line2,
+                  line3: line3,
+                  city: city,
+                  state: state,
+                  pincode: pincode,
+                },
+              },
+            },
+          },
+          {
+            new: true,
+            useFindAndModify: false,
+          }
+        );
 
+        // send user data to front-end
+        res.status(200).json({
+          role: role,
+          seller: {
+            gstin: gstin,
+            address: {
+              line1: line1,
+              line2: line2,
+              line3: line3,
+              city: city,
+              state: state,
+              pincode: pincode,
+            },
+          },
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    await updateUser(dbUser._id);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Seller registration failed" });
+  }
+});
 
 export default router;
