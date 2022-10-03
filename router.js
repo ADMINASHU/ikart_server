@@ -19,11 +19,69 @@ router.get("/product", async (req, res) => {
 });
 router.get("/getProduct/:uid", async (req, res) => {
   try {
-    console.log("received", req.params.uid);
+    // console.log("received", req.params.uid);
     const sellerProduct = await productModel.find({
       productSellers: req.params.uid,
     });
     res.status(200).send(sellerProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.delete("/deleteProduct/:id", async (req, res) => {
+  try {
+    const deleteProduct = await productModel.deleteOne({ _id: req.params.id });
+    res.status(200).send(deleteProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.put("/updateProduct/:id", async (req, res) => {
+  const {
+    productName,
+    productPrice,
+    productQuantity,
+    productCategory,
+    productImage,
+    productColor,
+    productCode,
+  } = req.body;
+  if (
+    !productName ||
+    !productPrice ||
+    !productQuantity ||
+    !productCategory ||
+    !productImage ||
+    !productColor ||
+    !productCode
+  )
+    return res.status(400).json({ error: "please fill all field" });
+  try {
+    const updateProduct = await productModel.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          productName: productName,
+          productPrice: productPrice,
+          productQuantity: productQuantity,
+          productCategory: productCategory,
+          productImage: productImage,
+          productColor: productColor,
+          productCode: productCode,
+        },
+      }
+    );
+    res.status(200).send(updateProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+router.get("/gProduct/:id", async (req, res) => {
+  try {
+    const getProduct = await productModel.findOne({ _id: req.params.id });
+    res.status(200).send(getProduct);
   } catch (error) {
     console.log(error);
   }
@@ -61,7 +119,6 @@ router.post("/addProduct", async (req, res) => {
       productColor: productColor,
       productCode: productCode,
       productSellers: sellerName,
-      
     });
     await product.save();
     res.status(201).json({ msg: "Product added successfully" });
