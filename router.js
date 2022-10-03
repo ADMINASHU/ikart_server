@@ -17,15 +17,57 @@ router.get("/product", async (req, res) => {
     console.log(error);
   }
 });
-
-router.post("/product", async (req, res) => {
+router.get("/getProduct/:uid", async (req, res) => {
   try {
-    const result = req.body;
-    const dbProduct = new productModel(result);
-    const saveResult = await dbProduct.save();
-    res.status(201).send(saveResult);
+    console.log("received", req.params.uid);
+    const sellerProduct = await productModel.find({
+      productSellers: req.params.uid,
+    });
+    res.status(200).send(sellerProduct);
   } catch (error) {
     console.log(error);
+  }
+});
+
+router.post("/addProduct", async (req, res) => {
+  const {
+    productName,
+    productPrice,
+    productQuantity,
+    productCategory,
+    productImage,
+    productColor,
+    productCode,
+    sellerName,
+  } = req.body;
+  if (
+    !productName ||
+    !productPrice ||
+    !productQuantity ||
+    !productCategory ||
+    !productImage ||
+    !productColor ||
+    !productCode ||
+    !sellerName
+  )
+    return res.status(400).json({ error: "please fill all field" });
+  try {
+    const product = new productModel({
+      productName: productName,
+      productPrice: productPrice,
+      productQuantity: productQuantity,
+      productCategory: productCategory,
+      productImage: productImage,
+      productColor: productColor,
+      productCode: productCode,
+      productSellers: sellerName,
+      
+    });
+    await product.save();
+    res.status(201).json({ msg: "Product added successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Adding Product failed" });
   }
 });
 
