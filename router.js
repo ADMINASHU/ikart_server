@@ -4,142 +4,10 @@ import productModel from "./productSchema.js";
 import userModel from "./userSchema.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import verifyToken from "./jwtVerify.js";
 
 router.get("/", (req, res) => {
   res.send({ msg: "welcome on iKart server home page" });
-});
-
-router.get("/product", async (req, res) => {
-  try {
-    const dbProduct = await productModel.find();
-    res.status(200).send(dbProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-router.get("/getProduct/:uid", async (req, res) => {
-  try {
-    // console.log("received", req.params.uid);
-    const sellerProduct = await productModel.find({
-      productSellers: req.params.uid,
-    });
-    res.status(200).send(sellerProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-router.delete("/deleteProduct/:id", async (req, res) => {
-  try {
-    const deleteProduct = await productModel.deleteOne({ _id: req.params.id });
-    res.status(200).send(deleteProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-router.put("/updateProduct/:id", async (req, res) => {
-  const {
-    productName,
-    productPrice,
-    productQuantity,
-    productCategory,
-    productImage,
-    productColor,
-    productCode,
-  } = req.body;
-  if (
-    !productName ||
-    !productPrice ||
-    !productQuantity ||
-    !productCategory ||
-    !productImage ||
-    !productColor ||
-    !productCode
-  )
-    return res.status(400).json({ error: "please fill all field" });
-  try {
-    const updateProduct = await productModel.updateOne(
-      { _id: req.params.id },
-      {
-        $set: {
-          productName: productName,
-          productPrice: productPrice,
-          productQuantity: productQuantity,
-          productCategory: productCategory,
-          productImage: productImage,
-          productColor: productColor,
-          productCode: productCode,
-        },
-      }
-    );
-    res.status(200).send(updateProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-router.get("/gProduct/:id", async (req, res) => {
-  try {
-    const getProduct = await productModel.findOne({ _id: req.params.id });
-    res.status(200).send(getProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-router.get("/searchProduct/:key", async (req, res) => {
-  try {
-    const getProduct = await productModel.find({
-      $or: [
-        { productName: { $regex: req.params.key } },
-        { productCategory: { $regex: req.params.key } },
-        { productCode: req.params.key },
-      ],
-    });
-    res.status(200).send(getProduct);
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-router.post("/addProduct", async (req, res) => {
-  const {
-    productName,
-    productPrice,
-    productQuantity,
-    productCategory,
-    productImage,
-    productColor,
-    productCode,
-    sellerName,
-  } = req.body;
-  if (
-    !productName ||
-    !productPrice ||
-    !productQuantity ||
-    !productCategory ||
-    !productImage ||
-    !productColor ||
-    !productCode ||
-    !sellerName
-  )
-    return res.status(400).json({ error: "please fill all field" });
-  try {
-    const product = new productModel({
-      productName: productName,
-      productPrice: productPrice,
-      productQuantity: productQuantity,
-      productCategory: productCategory,
-      productImage: productImage,
-      productColor: productColor,
-      productCode: productCode,
-      productSellers: sellerName,
-    });
-    await product.save();
-    res.status(201).json({ msg: "Product added successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Adding Product failed" });
-  }
 });
 
 router.post("/signup", async (req, res) => {
@@ -230,7 +98,144 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-router.post("/seller", async (req, res) => {
+// other routes *******************************************************************************************************************
+
+router.get("/product", async (req, res) => {
+  try {
+    const dbProduct = await productModel.find();
+    res.status(200).send(dbProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.get("/getProduct/:uid", verifyToken, async (req, res) => {
+  try {
+    // console.log("received", req.params.uid);
+    const sellerProduct = await productModel.find({
+      productSellers: req.params.uid,
+    });
+    res.status(200).send(sellerProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.delete("/deleteProduct/:id", verifyToken, async (req, res) => {
+  try {
+    const deleteProduct = await productModel.deleteOne({ _id: req.params.id });
+    res.status(200).send(deleteProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.put("/updateProduct/:id", verifyToken, async (req, res) => {
+  const {
+    productName,
+    productPrice,
+    productQuantity,
+    productCategory,
+    productImage,
+    productColor,
+    productCode,
+  } = req.body;
+  if (
+    !productName ||
+    !productPrice ||
+    !productQuantity ||
+    !productCategory ||
+    !productImage ||
+    !productColor ||
+    !productCode
+  )
+    return res.status(400).json({ error: "please fill all field" });
+  try {
+    const updateProduct = await productModel.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          productName: productName,
+          productPrice: productPrice,
+          productQuantity: productQuantity,
+          productCategory: productCategory,
+          productImage: productImage,
+          productColor: productColor,
+          productCode: productCode,
+        },
+      }
+    );
+    res.status(200).send(updateProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.get("/gProduct/:id", verifyToken, async (req, res) => {
+  try {
+    const getProduct = await productModel.findOne({ _id: req.params.id });
+    res.status(200).send(getProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+router.get("/searchProduct/:key", async (req, res) => {
+  try {
+    const getProduct = await productModel.find({
+      $or: [
+        { productName: { $regex: req.params.key } },
+        { productCategory: { $regex: req.params.key } },
+        { productCode: req.params.key },
+      ],
+    });
+    res.status(200).send(getProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.post("/addProduct", verifyToken, async (req, res) => {
+  const {
+    productName,
+    productPrice,
+    productQuantity,
+    productCategory,
+    productImage,
+    productColor,
+    productCode,
+    sellerName,
+  } = req.body;
+  if (
+    !productName ||
+    !productPrice ||
+    !productQuantity ||
+    !productCategory ||
+    !productImage ||
+    !productColor ||
+    !productCode ||
+    !sellerName
+  )
+    return res.status(400).json({ error: "please fill all field" });
+  try {
+    const product = new productModel({
+      productName: productName,
+      productPrice: productPrice,
+      productQuantity: productQuantity,
+      productCategory: productCategory,
+      productImage: productImage,
+      productColor: productColor,
+      productCode: productCode,
+      productSellers: sellerName,
+    });
+    await product.save();
+    res.status(201).json({ msg: "Product added successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Adding Product failed" });
+  }
+});
+
+router.post("/seller", verifyToken, async (req, res) => {
   try {
     const { uname, role, gstin, line1, line2, line3, city, state, pincode } =
       req.body;
