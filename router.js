@@ -86,6 +86,20 @@ router.get("/gProduct/:id", async (req, res) => {
     console.log(error);
   }
 });
+router.get("/searchProduct/:key", async (req, res) => {
+  try {
+    const getProduct = await productModel.find({
+      $or: [
+        { productName: { $regex: req.params.key } },
+        { productCategory: { $regex: req.params.key } },
+        { productCode: req.params.key },
+      ],
+    });
+    res.status(200).send(getProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 router.post("/addProduct", async (req, res) => {
   const {
