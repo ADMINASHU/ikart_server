@@ -158,7 +158,6 @@ router.get("/loggedIn", async (req, res) => {
     // console.log("Log In");
   } catch (error) {
     console.log(error);
-    res.send(false);
   }
 });
 
