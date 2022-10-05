@@ -11,24 +11,50 @@ router.get("/", (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const { uname, email, password, cPassword, role } = req.body;
-  if (!uname || !email || !password || !cPassword)
-    return res.status(400).json({ error: "please fill all field" });
-  if (password != cPassword)
-    return res.status(412).json({ error: "Confirm password not matched" });
   try {
+    const { uname, email, password, cPassword, role } = req.body;
+    if (!uname || !email || !password || !cPassword)
+      return res
+        .status(400)
+        .json({ errorMassage: "Please enter all required fields" });
+    if (password != cPassword)
+      return res.status(400).json({
+        errorMassage: "Confirm password does not match with password",
+      });
     const userExist = await userModel.findOne({ uname: uname });
-    if (userExist) return res.status(409).json({ error: "User already exist" });
-    const user = new userModel({
-      uname,
-      email,
-      password,
-      role,
+    if (userExist)
+      return res
+        .status(400)
+        .json({ errorMassage: "Account with this Username has already exist" });
+    const salt = await bcrypt.genSalt();
+    const HashPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new userModel({
+      uname: uname,
+      email: email,
+      password: HashPassword,
+      role: role,
     });
-    await user.save();
-    res.status(201).json({ msg: "User registered successfully" });
+    const saveUser = await newUser.save();
+
+    const refreshToken = jwt.sign(
+      { user: saveUser._id },
+      process.env.REFRESH_SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    //save refreshToken in cookies
+    res
+      .cookie("jwt", refreshToken, {
+        httpOnly: true,
+        // sameSite: "none",
+        maxAge: 15 * 60 * 1000,
+      })
+      .send();
+
+    // res.status(201).json({ msg: "User registered successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "User registration failed" });
   }
 });
@@ -37,64 +63,102 @@ router.post("/signin", async (req, res) => {
   try {
     const { uname, password } = req.body;
     if (!uname || !password)
-      return res.status(400).json({ error: "Please fill all field" });
+      return res
+        .status(400)
+        .json({ errorMassage: "Please enter all required fields" });
     const dbUser = await userModel.findOne({ uname: uname });
-    if (!dbUser) return res.status(401).json({ error: "invalid credentials" });
-    const isMatch = await bcrypt.compare(password, dbUser.password);
-    if (isMatch) {
-      // create jwt
-      const accessToken = jwt.sign(
-        { username: dbUser.uname },
-        process.env.ACCESS_SECRET_KEY,
-        { expiresIn: "10m" }
-      );
-      const refreshToken = jwt.sign(
-        { username: dbUser.uname },
-        process.env.REFRESH_SECRET_KEY,
-        { expiresIn: "1d" }
-      );
-      // save token to DB
-      const updateUser = async (id) => {
-        try {
-          await userModel.findByIdAndUpdate(
-            { _id: id },
-            {
-              $set: {
-                token: refreshToken,
-              },
-            },
-            {
-              new: true,
-              useFindAndModify: false,
-            }
-          );
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      await updateUser(dbUser._id);
+    if (!dbUser)
+      return res.status(401).json({ errorMassage: "invalid credentials" });
+    const matchPassword = await bcrypt.compare(password, dbUser.password);
+    if (!matchPassword)
+      return res.status(401).json({ errorMassage: "invalid credentials" });
 
-      //save refreshToken in cookies
-      res.cookie("jwt", refreshToken, {
+    const refreshToken = jwt.sign(
+      { user: dbUser._id },
+      process.env.REFRESH_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    // save token to DB
+
+    await userModel.findByIdAndUpdate(
+      { _id: dbUser._id },
+      {
+        $set: {
+          token: refreshToken,
+        },
+      },
+      {
+        new: true,
+        useFindAndModify: false,
+      }
+    );
+
+    //save refreshToken in cookies
+    res
+      .cookie("jwt", refreshToken, {
         httpOnly: true,
-        sameSite: "none",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+        // sameSite: "none",
+        maxAge: 1 * 60 * 60 * 1000,
+      })
+      .send();
 
-      // send user data to front-end
-      res.status(200).json({
-        username: dbUser.uname,
-        email: dbUser.email,
-        role: dbUser.role,
-        accessToken: accessToken,
-        seller: dbUser.seller,
-      });
-    } else {
-      res.status(401).json({ error: "invalid credentials" });
-    }
+    // send user data to front-end
+    // res.status(200).json({
+    //   username: dbUser.uname,
+    //   email: dbUser.email,
+    //   role: dbUser.role,
+    //   accessToken: accessToken,
+    //   seller: dbUser.seller,
+    // });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMassage: "User SignIn failed" });
+  }
+});
+
+router.get("/logout", (req, res) => {
+  try {
+    res
+      .cookie("jwt", "", {
+        httpOnly: true,
+        // sameSite: "none",
+        maxAge: 0,
+      })
+      .send();
+    // console.log("log out");
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "User SignIn failed" });
+  }
+});
+
+router.get("/loggedIn", async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    // console.log(token);
+    if (!token) return res.send(false);
+    const result = jwt.verify(token, process.env.REFRESH_SECRET_KEY);
+    const { user } = result;
+    // get user details
+    const dbUser = await userModel.findOne({ _id: user });
+    // create access token
+    const accessToken = jwt.sign(
+      { user: dbUser._id },
+      process.env.ACCESS_SECRET_KEY,
+      { expiresIn: "15m" }
+    );
+    //  send user data to front-end
+    res.json({
+      username: dbUser.uname,
+      email: dbUser.email,
+      role: dbUser.role,
+      accessToken: accessToken,
+      seller: dbUser.seller,
+    });
+
+    // console.log("Log In");
+  } catch (error) {
+    console.log(error);
+    res.send(false);
   }
 });
 

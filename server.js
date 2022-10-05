@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import dbConnect from "./dbConn.js";
 import router from "./router.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 const whiteList = ["http://localhost:3000", "http://localhost:4000"];
 const corsOption = {
   origin: (origin, callback) => {
@@ -12,12 +14,12 @@ const corsOption = {
       callback(new Error("Not allowed by cors"));
     }
   },
-  optionsSuccessStatus: 200,
+  credentials: true,
 };
-
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors(corsOption));
 dotenv.config();
 const port = process.env.PORT || 4000;
