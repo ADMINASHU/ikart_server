@@ -1,11 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
-import dbConnect from "./dbConn.js";
+import "./dbConn.js";
 import router from "./router.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-const whiteList = ["http://localhost:3000", "http://localhost:4000"];
+const whiteList = ["http://localhost:3000", process.env.WHITELIST];
 const corsOption = {
   origin: (origin, callback) => {
     if (whiteList.indexOf(origin) !== -1 || !origin) {

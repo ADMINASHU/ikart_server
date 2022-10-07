@@ -66,7 +66,7 @@ router.post("/signin", async (req, res) => {
       return res
         .status(400)
         .json({ errorMassage: "Please enter all required fields" });
-    const dbUser = await userModel.findOne({ uname: uname });
+    const dbUser = await userModel.findOne({ uname: uname }).exec();
     if (!dbUser)
       return res.status(401).json({ errorMassage: "invalid credentials" });
     const matchPassword = await bcrypt.compare(password, dbUser.password);
@@ -132,12 +132,12 @@ router.get("/loggedIn", async (req, res) => {
     const result = jwt.verify(token, process.env.REFRESH_SECRET_KEY);
     const { user } = result;
     // get user details
-    const dbUser = await userModel.findOne({ _id: user });
+    const dbUser = await userModel.findOne({ _id: user }).exec();
     // create access token
     const accessToken = jwt.sign(
       { user: dbUser._id },
       process.env.ACCESS_SECRET_KEY,
-      { expiresIn: "15m" }
+      { expiresIn: "5m" }
     );
     //  send user data to front-end
     res.json({

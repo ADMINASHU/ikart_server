@@ -11,14 +11,5 @@ async function dbConnect() {
   }
 }
 
-// async function dbClose() {
-//   try {
-//     await mongoose.connection.close(() =>
-//       console.log("database connection terminated...")
-//     );
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
 
 export default dbConnect();
