@@ -102,14 +102,7 @@ router.post("/signin", async (req, res) => {
       })
       .send();
 
-    // send user data to front-end
-    // res.status(200).json({
-    //   username: dbUser.uname,
-    //   email: dbUser.email,
-    //   role: dbUser.role,
-    //   accessToken: accessToken,
-    //   seller: dbUser.seller,
-    // });
+  
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMassage: "User SignIn failed" });
