@@ -20,6 +20,7 @@ const userSchema = new Schema({
       pincode: Number,
     },
   },
+  cart: [{ item: String }],
 });
 
 // userSchema.pre("save", async function (next) {

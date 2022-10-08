@@ -101,8 +101,6 @@ router.post("/signin", async (req, res) => {
         maxAge: 1 * 60 * 60 * 1000,
       })
       .send();
-
-  
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMassage: "User SignIn failed" });
@@ -141,14 +139,71 @@ router.get("/loggedIn", async (req, res) => {
     );
     //  send user data to front-end
     res.json({
+      userId: dbUser._id,
       username: dbUser.uname,
       email: dbUser.email,
       role: dbUser.role,
       accessToken: accessToken,
       seller: dbUser.seller,
+      cart: dbUser.cart,
     });
 
     // console.log("Log In");
+  } catch (error) {
+    console.log(error);
+  }
+});
+// Cart routes *******************************************************************************************************************
+
+router.put("/addCart/:id", verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400);
+    // console.log(userId);
+    await userModel.findByIdAndUpdate(
+      { _id: userId },
+      {
+        $push: {
+          cart: { item: req.params.id },
+        },
+      },
+      {
+        new: true,
+        useFindAndModify: false,
+      }
+    );
+    res.status(201).json({ massage: "Product added in Cart" });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.put("/updateCart/:id", verifyToken, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400);
+    // console.log(userId);
+    await userModel.findByIdAndUpdate(
+      { _id: userId },
+      {
+        $pull: {
+          cart: { item: req.params.id },
+        },
+      }
+    );
+    res.status(200).json({ massage: "Product remove from Cart" });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.get("/getCart/:uid", verifyToken, async (req, res) => {
+  try {
+    const dbUser = await userModel.findOne({ _id: req.params.uid });
+    const dbProduct = await productModel.find({
+      _id: { $in: dbUser.cart.map((item) => item.item) },
+    });
+    res.status(200).json(dbProduct);
   } catch (error) {
     console.log(error);
   }
@@ -235,6 +290,7 @@ router.get("/gProduct/:id", verifyToken, async (req, res) => {
     console.log(error);
   }
 });
+
 router.get("/searchProduct/:key", async (req, res) => {
   try {
     const getProduct = await productModel.find({
