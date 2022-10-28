@@ -1,28 +1,28 @@
 import express from "express";
 import dotenv from "dotenv";
-import "./dbConn.js";
+import "./services/dbConn.js";
 import router from "./router.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import authRouter from "./router/authRoutes.js";
+import productRouter from "./router/productRoutes.js";
+import kartRouter from "./router/kartRoutes.js";
+import sellerRouter from "./router/sellerRoutes.js";
+import corsOption from "./config/corsOption.js";
 
-const whiteList = ["http://localhost:3000", process.env.WHITELIST];
-const corsOption = {
-  origin: (origin, callback) => {
-    if (whiteList.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by cors"));
-    }
-  },
-  credentials: true,
-};
-
+dotenv.config();
 const app = express();
+const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsOption));
-dotenv.config();
-const port = process.env.PORT || 4000;
-app.use(router);
+// app.use(router);
+app.get("/", (req, res) => {
+    res.send({ msg: "welcome on iKart server home page" });
+  });
+app.use("/auth", authRouter);
+app.use("/product", productRouter);
+app.use("/kart", kartRouter);
+app.use("/seller", sellerRouter);
 
 app.listen(port, () => console.log(`iKart server is running on port: ${port}`));

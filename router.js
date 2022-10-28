@@ -1,15 +1,15 @@
 import express from "express";
 const router = express.Router();
-import productModel from "./productSchema.js";
-import userModel from "./userSchema.js";
+import productModel from "./modules/productSchema.js";
+import userModel from "./modules/userSchema.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import verifyToken from "./jwtVerify.js";
+import verifyToken from "./services/jwtVerify.js";
 
 router.get("/", (req, res) => {
   res.send({ msg: "welcome on iKart server home page" });
 });
-
+// done 13
 router.post("/signup", async (req, res) => {
   try {
     const { uname, email, password, cPassword, role } = req.body;
@@ -58,7 +58,7 @@ router.post("/signup", async (req, res) => {
     res.status(500).json({ error: "User registration failed" });
   }
 });
-
+// done 14
 router.post("/signin", async (req, res) => {
   try {
     const { uname, password } = req.body;
@@ -106,8 +106,8 @@ router.post("/signin", async (req, res) => {
     res.status(500).json({ errorMassage: "User SignIn failed" });
   }
 });
-
-router.get("/logout", (req, res) => {
+// done 12
+router.post("/logout", (req, res) => {
   try {
     res
       .cookie("jwt", "", {
@@ -121,7 +121,7 @@ router.get("/logout", (req, res) => {
     console.log(error);
   }
 });
-
+// done 15
 router.get("/loggedIn", async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -135,7 +135,7 @@ router.get("/loggedIn", async (req, res) => {
     const accessToken = jwt.sign(
       { user: dbUser._id },
       process.env.ACCESS_SECRET_KEY,
-      { expiresIn: "5m" }
+      { expiresIn: "15m" }
     );
     //  send user data to front-end
     res.json({
@@ -153,32 +153,74 @@ router.get("/loggedIn", async (req, res) => {
     console.log(error);
   }
 });
-// Cart routes *******************************************************************************************************************
-
+// done 8
 router.put("/addCart/:id", verifyToken, async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, count } = req.body;
     if (!userId) return res.status(400);
     // console.log(userId);
-    await userModel.findByIdAndUpdate(
-      { _id: userId },
-      {
-        $push: {
-          cart: { item: req.params.id },
-        },
-      },
-      {
-        new: true,
-        useFindAndModify: false,
+    const existUser = await userModel.findOne({ _id: userId });
+
+    const existItem = existUser?.cart.filter((elem) => {
+      if (elem.item === req.params.id) {
+        return elem;
+      } else {
+        return null;
       }
-    );
-    res.status(201).json({ massage: "Product added in Cart" });
+    });
+
+    // console.log("afaaggagagag", existItem);
+
+    if (existItem?.length) {
+      await userModel.findByIdAndUpdate(
+        { _id: userId },
+        {
+          $pull: {
+            cart: { item: req.params.id },
+          },
+        }
+      );
+      if (count > 0) {
+        await userModel.findByIdAndUpdate(
+          { _id: userId },
+          {
+            $push: {
+              cart: { item: req.params.id, count: count },
+            },
+          }
+        );
+      } else {
+        await userModel.findByIdAndUpdate(
+          { _id: userId },
+          {
+            $pull: {
+              cart: { item: req.params.id },
+            },
+          }
+        );
+      }
+      res.status(201).json({ massage: "Product count is updated" });
+    } else {
+      await userModel.findByIdAndUpdate(
+        { _id: userId },
+        {
+          $push: {
+            cart: { item: req.params.id, count: count },
+          },
+        },
+        {
+          new: true,
+          useFindAndModify: false,
+        }
+      );
+      res.status(201).json({ massage: "Product added in Cart" });
+    }
   } catch (error) {
     console.log(error);
   }
 });
-
-router.put("/updateCart/:id", verifyToken, async (req, res) => {
+// done 9
+router.put("/removeCart/:id", verifyToken, async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) return res.status(400);
@@ -196,21 +238,95 @@ router.put("/updateCart/:id", verifyToken, async (req, res) => {
     console.log(error);
   }
 });
-
+// not in use ##################################
+router.put("/updateCart/:id", verifyToken, async (req, res) => {
+  try {
+    const { userId, count } = req.body;
+    if (!userId) return res.status(400);
+    // console.log(userId);
+    await userModel.findByIdAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          cart: { item: req.params.id, count: count },
+        },
+      },
+      {
+        new: false,
+        useFindAndModify: true,
+      }
+    );
+    res.status(200).json({ massage: "Product updated" });
+  } catch (error) {
+    console.log(error);
+  }
+});
+// done 10
 router.get("/getCart/:uid", verifyToken, async (req, res) => {
   try {
     const dbUser = await userModel.findOne({ _id: req.params.uid });
     const dbProduct = await productModel.find({
       _id: { $in: dbUser.cart.map((item) => item.item) },
     });
-    res.status(200).json(dbProduct);
+    const product = dbProduct.map((prod) => {
+      const cartItem = dbUser.cart.filter((cart) => {
+        if (cart.item === prod._doc._id.toString()) {
+          return cart;
+        }
+      });
+      return {
+        ...prod._doc,
+        count: cartItem[0].count,
+        price: prod._doc.productPrice * cartItem[0].count,
+        discount: prod._doc.productDiscount * cartItem[0].count,
+      };
+    });
+
+    const totalCartCount = product.reduce(
+      (partialSum, elem) => partialSum + elem.count,
+      0
+    );
+    // console.log(totalCartCount);
+    const totalCartPrice = product.reduce(
+      (partialSum, elem) => partialSum + elem.price,
+      0
+    );
+    // console.log(totalCartPrice);
+    const totalCartDiscount = product.reduce(
+      (partialSum, elem) => partialSum + elem.discount,
+      0
+    );
+    // console.log(totalCartDiscount);
+    const cart = {
+      items: product,
+      tCount: totalCartCount,
+      tPrice: totalCartPrice,
+      tDiscount: totalCartDiscount,
+    };
+    res.status(200).json(cart);
   } catch (error) {
     console.log(error);
   }
 });
+// done 11
+router.get("/getCount/:uid/:id", verifyToken, async (req, res) => {
+  try {
+    const dbUser = await userModel.findOne({ _id: req.params.uid });
+    const cart = await dbUser.cart;
+    if (cart) {
+      const cartItem = await cart?.filter((elem) => {
+        if (elem.item === req.params.id) {
+          return elem;
+        }
+      });
 
-// other routes *******************************************************************************************************************
-
+      res.status(200).json(cartItem[0]?.count);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+//done 7
 router.get("/product", async (req, res) => {
   try {
     const dbProduct = await productModel.find();
@@ -219,19 +335,28 @@ router.get("/product", async (req, res) => {
     console.log(error);
   }
 });
-
+//  not use ####################################
+router.get("/product/:num", async (req, res) => {
+  try {
+    const dbProduct = await productModel.find().limit(req.params.num);
+    res.status(200).send(dbProduct);
+  } catch (error) {
+    console.log(error);
+  }
+});
+// done 6
 router.get("/getProduct/:uid", verifyToken, async (req, res) => {
   try {
-    // console.log("received", req.params.uid);
     const sellerProduct = await productModel.find({
       productSellers: req.params.uid,
     });
+    // console.log(sellerProduct);
     res.status(200).send(sellerProduct);
   } catch (error) {
     console.log(error);
   }
 });
-
+// done 5
 router.delete("/deleteProduct/:id", verifyToken, async (req, res) => {
   try {
     const deleteProduct = await productModel.deleteOne({ _id: req.params.id });
@@ -240,7 +365,7 @@ router.delete("/deleteProduct/:id", verifyToken, async (req, res) => {
     console.log(error);
   }
 });
-
+// done 4
 router.put("/updateProduct/:id", verifyToken, async (req, res) => {
   const {
     productName,
@@ -281,7 +406,7 @@ router.put("/updateProduct/:id", verifyToken, async (req, res) => {
     console.log(error);
   }
 });
-
+// done 3
 router.get("/gProduct/:id", verifyToken, async (req, res) => {
   try {
     const getProduct = await productModel.findOne({ _id: req.params.id });
@@ -290,14 +415,16 @@ router.get("/gProduct/:id", verifyToken, async (req, res) => {
     console.log(error);
   }
 });
-
+// done 2
 router.get("/searchProduct/:key", async (req, res) => {
   try {
+    const product = req.params.key;
+    if (!product) return res.send({});
     const getProduct = await productModel.find({
       $or: [
-        { productName: { $regex: req.params.key } },
-        { productCategory: { $regex: req.params.key } },
-        { productCode: req.params.key },
+        { productName: { $regex: product } },
+        { productCategory: { $regex: product } },
+        { productCode: product },
       ],
     });
     res.status(200).send(getProduct);
@@ -305,7 +432,7 @@ router.get("/searchProduct/:key", async (req, res) => {
     console.log(error);
   }
 });
-
+// done 1
 router.post("/addProduct", verifyToken, async (req, res) => {
   const {
     productName,
@@ -316,6 +443,7 @@ router.post("/addProduct", verifyToken, async (req, res) => {
     productColor,
     productCode,
     sellerName,
+    productDiscount,
   } = req.body;
   if (
     !productName ||
@@ -325,7 +453,8 @@ router.post("/addProduct", verifyToken, async (req, res) => {
     !productImage ||
     !productColor ||
     !productCode ||
-    !sellerName
+    !sellerName ||
+    !productDiscount
   )
     return res.status(400).json({ error: "please fill all field" });
   try {
@@ -338,6 +467,7 @@ router.post("/addProduct", verifyToken, async (req, res) => {
       productColor: productColor,
       productCode: productCode,
       productSellers: sellerName,
+      productDiscount: productDiscount,
     });
     await product.save();
     res.status(201).json({ msg: "Product added successfully" });
@@ -346,7 +476,7 @@ router.post("/addProduct", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Adding Product failed" });
   }
 });
-
+// done 16
 router.post("/seller", verifyToken, async (req, res) => {
   try {
     const { uname, role, gstin, line1, line2, line3, city, state, pincode } =

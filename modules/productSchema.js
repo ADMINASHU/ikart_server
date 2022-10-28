@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   productColor: String,
   productCode: String,
   productSellers: [],
+  productDiscount: Number,
 })
 
 const productModel = new mongoose.model("products", productSchema);

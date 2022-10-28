@@ -7,11 +7,11 @@ function verifyToken(req, res, next) {
       if (valid) {
         next();
       } else {
-        res.status(401).json({ err: "not authorized" });
+        res.status(401).json({ err: "Unauthorized Token" });
       }
     });
   } else {
-    res.status(403).json({ err: "not authorized" });
+    res.status(403).json({ err: "Access Token not available" });
   }
 }
 
