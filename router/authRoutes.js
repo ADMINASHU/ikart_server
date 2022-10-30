@@ -1,5 +1,6 @@
 import express from "express";
 const authRouter = express.Router();
+import { registerUser } from "../controllers/userController.js";
 import userModel from "../modules/userSchema.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -7,10 +8,10 @@ import jwt from "jsonwebtoken";
 authRouter.post("/signup", async (req, res) => {
   try {
     const { uname, email, password, cPassword, role } = req.body;
-    if (!uname || !email || !password || !cPassword)
-      return res
-        .status(400)
-        .json({ errorMassage: "Please enter all required fields" });
+    if (!uname || !email || !password || !cPassword) {
+      res.status(400);
+      throw new Error("Please enter all required fields");
+    }
     if (password != cPassword)
       return res.status(400).json({
         errorMassage: "Confirm password does not match with password",
@@ -147,6 +148,5 @@ authRouter.post("/logout", (req, res) => {
     console.log(error);
   }
 });
-
 
 export default authRouter;

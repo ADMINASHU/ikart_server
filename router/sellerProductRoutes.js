@@ -2,7 +2,8 @@ import express from "express";
 const sellerProductRouter = express.Router();
 import productModel from "../modules/productSchema.js";
 import verifyToken from "../services/jwtVerify.js";
-
+import uploadImage from "../config/cloudinary.js";
+import clearTempImage from "../services/clearTemp.js";
 
 sellerProductRouter.get("/getProducts/:uid", verifyToken, async (req, res) => {
   try {
@@ -16,18 +17,22 @@ sellerProductRouter.get("/getProducts/:uid", verifyToken, async (req, res) => {
   }
 });
 
-sellerProductRouter.post("/addProduct", verifyToken, async (req, res) => {
+sellerProductRouter.post("/addProduct", async (req, res) => {
+  const image = req.files.productImage;
+  const uploadResult = await uploadImage(image, "Products");
+  const productImage = uploadResult.secure_url;
+  clearTempImage(image);
   const {
     productName,
     productPrice,
     productQuantity,
     productCategory,
-    productImage,
     productColor,
     productCode,
     sellerName,
     productDiscount,
   } = req.body;
+
   if (
     !productName ||
     !productPrice ||
@@ -101,13 +106,19 @@ sellerProductRouter.put("/updateProduct/:id", verifyToken, async (req, res) => {
   }
 });
 
-sellerProductRouter.delete("/deleteProduct/:id", verifyToken, async (req, res) => {
-  try {
-    const deleteProduct = await productModel.deleteOne({ _id: req.params.id });
-    res.status(200).send(deleteProduct);
-  } catch (error) {
-    console.log(error);
+sellerProductRouter.delete(
+  "/deleteProduct/:id",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const deleteProduct = await productModel.deleteOne({
+        _id: req.params.id,
+      });
+      res.status(200).send(deleteProduct);
+    } catch (error) {
+      console.log(error);
+    }
   }
-});
+);
 
 export default sellerProductRouter;
