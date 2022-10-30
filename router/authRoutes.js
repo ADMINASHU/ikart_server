@@ -1,9 +1,14 @@
 import express from "express";
 const authRouter = express.Router();
-import { registerUser } from "../controllers/userController.js";
 import userModel from "../modules/userSchema.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { isLoggedIn, loginUser, logoutUser, registerUser } from "../controllers/authController.js";
+
+authRouter.post("/register", registerUser);
+authRouter.post("/login", loginUser);
+authRouter.get("/logout", logoutUser);
+authRouter.get("/isLoggedIn", isLoggedIn);
 
 authRouter.post("/signup", async (req, res) => {
   try {

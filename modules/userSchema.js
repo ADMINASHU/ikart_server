@@ -1,12 +1,36 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs";
 //user schema
 const userSchema = new mongoose.Schema({
-  uname: String,
-  password: String,
-  email: String,
-  role: String,
+  uname: {
+    type: String,
+    match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid username"],
+    required: [true, "Please add a username"],
+  },
+  password: {
+    type: String,
+    required: [true, "Please add a password"],
+  },
+  email: {
+    type: String,
+    unique: true,
+    trim: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      "Please enter a valid email",
+    ],
+    required: [true, "Please add a email"],
+  },
+  role: {
+    type: String,
+    default: "User",
+  },
   token: String,
+  image: {
+    type: String,
+    default:
+      "https://res.cloudinary.com/dc1zhz2bg/image/upload/v1667140385/Users/user_xv7hft.png",
+  },
   seller: {
     gstin: String,
     address: {
@@ -26,6 +50,16 @@ const userSchema = new mongoose.Schema({
   ],
 });
 
+// Hash password before save
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  const HashPassword = await bcrypt.hash(this.password, salt);
+  this.password = HashPassword;
+  next();
+});
 
 const userModel = new mongoose.model("users", userSchema);
 

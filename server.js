@@ -11,6 +11,7 @@ import sellerRouter from "./router/sellerRoutes.js";
 import corsOption from "./config/corsOption.js";
 import fileUpload from "express-fileupload";
 import errorHandler from "./services/errorHandler.js";
+import userRouter from "./router/userRoutes.js";
 
 
 dotenv.config();
@@ -44,6 +45,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
 app.use("/kart", kartRouter);
+app.use("/user", userRouter);
 app.use("/seller", sellerRouter);
 
 // errorHandler
