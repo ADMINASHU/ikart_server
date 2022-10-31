@@ -10,6 +10,8 @@ authRouter.post("/login", loginUser);
 authRouter.get("/logout", logoutUser);
 authRouter.get("/isLoggedIn", isLoggedIn);
 
+
+// delete after fronted update
 authRouter.post("/signup", async (req, res) => {
   try {
     const { uname, email, password, cPassword, role } = req.body;

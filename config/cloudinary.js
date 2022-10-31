@@ -5,6 +5,6 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const uploadImage = (image, folderName) =>
-  cloudinary.v2.uploader.upload(image.tempFilePath, { folder: folderName });
+  cloudinary.v2.uploader.upload(image?.tempFilePath, { folder: folderName });
 
 export default uploadImage;

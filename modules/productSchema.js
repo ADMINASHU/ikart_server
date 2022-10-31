@@ -10,7 +10,7 @@ const productSchema = new mongoose.Schema({
   productImage: String,
   productColor: String,
   productCode: String,
-  productSellers: [],
+  productSellers: String,
   productDiscount: Number,
 })
 

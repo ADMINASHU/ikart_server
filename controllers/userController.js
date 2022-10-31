@@ -4,18 +4,11 @@ import bcrypt from "bcryptjs";
 
 // get User
 const getUser = expressAsyncHandler(async (req, res) => {
-  if (req.user) {
-    const { _id, uname, email, role, image, cart } = req.user;
-
+  const user = await userModel.findById(req.user._id).select("-password");
+  if (user) {
+  
     // Send response
-    res.status(200).json({
-      _id,
-      uname,
-      email,
-      role,
-      image,
-      cart,
-    });
+    res.status(200).json(user);
   } else {
     res.status(400);
     throw new Error("User not found");
@@ -29,9 +22,9 @@ const updateUser = expressAsyncHandler(async (req, res) => {
     const { uname, email, role, image } = user;
 
     user.email = email;
-    user.uname = req.body.uname || uname;
-    user.role = req.body.role || role;
-    user.image = req.body.image || image;
+    user.uname = req.body?.uname || uname;
+    user.role = req.body?.role || role;
+    user.image = req.body?.image || image;
 
     // update in DB
     const updateUser = await user.save();

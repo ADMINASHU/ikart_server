@@ -13,7 +13,6 @@ import fileUpload from "express-fileupload";
 import errorHandler from "./services/errorHandler.js";
 import userRouter from "./router/userRoutes.js";
 
-
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,14 +27,12 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors(corsOption));
 
-
 // cloudConfig
 app.use(
   fileUpload({
     useTempFiles: true,
   })
 );
-
 
 // Routes
 app.get("/", (req, res) => {
@@ -49,7 +46,7 @@ app.use("/user", userRouter);
 app.use("/seller", sellerRouter);
 
 // errorHandler
-app.use(errorHandler)
+app.use(errorHandler);
 
 // running server
 app.listen(port, () => console.log(`iKart server is running on port: ${port}`));

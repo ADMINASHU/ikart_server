@@ -4,7 +4,23 @@ import productModel from "../modules/productSchema.js";
 import verifyToken from "../services/jwtVerify.js";
 import uploadImage from "../config/cloudinary.js";
 import clearTempImage from "../services/clearTemp.js";
+import {
+  getAllProduct,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+} from "../controllers/sellerProductController.js";
+import verifyAuth from "../services/verifyAuth.js";
 
+// sellerProductRouter.get("/getAllProduct", verifyAuth, getAllProduct);
+
+// sellerProductRouter.post("/addProduct", verifyAuth, addProduct);
+
+// sellerProductRouter.patch("/updateProduct/:id", verifyAuth, updateProduct);
+
+// sellerProductRouter.delete("/deleteProduct/:id", verifyAuth, deleteProduct);
+
+// delete after frontend update
 sellerProductRouter.get("/getProducts/:uid", verifyToken, async (req, res) => {
   try {
     const sellerProduct = await productModel.find({
@@ -17,7 +33,7 @@ sellerProductRouter.get("/getProducts/:uid", verifyToken, async (req, res) => {
   }
 });
 
-sellerProductRouter.post("/addProduct", async (req, res) => {
+sellerProductRouter.post("/addProduct", verifyToken, async (req, res) => {
   const image = req.files.productImage;
   const uploadResult = await uploadImage(image, "Products");
   const productImage = uploadResult.secure_url;
