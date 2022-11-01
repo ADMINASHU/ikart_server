@@ -96,7 +96,11 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
     const updateSellerProduct = await sellerProduct.save();
 
     // Send response
-    res.status(200).json(updateSellerProduct);
+    if (updateSellerProduct) {
+      res.status(200).json({ massage: "Product is updated successfully" });
+    } else {
+      res.status(500).json({ message: "Product update failed" });
+    }
   } else {
     res.status(400);
     throw new Error("Product not found");
@@ -105,13 +109,12 @@ const updateProduct = expressAsyncHandler(async (req, res) => {
 
 // delete Product
 const deleteProduct = expressAsyncHandler(async (req, res) => {
-    const deleteProduct = await productModel.findByIdAndDelete(req.params.id);
-    if(!deleteProduct){
-        res.status(400);
-        throw new Error("Product not found");
-      }
-    res.status(200).json({ Message: "Product deleted successfully" });
-
+  const deleteProduct = await productModel.findByIdAndDelete(req.params.id);
+  if (!deleteProduct) {
+    res.status(400);
+    throw new Error("Product not found");
+  }
+  res.status(200).json({ Message: "Product deleted successfully" });
 });
 
 export { getAllProduct, addProduct, updateProduct, deleteProduct };

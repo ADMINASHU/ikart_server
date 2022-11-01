@@ -10,20 +10,20 @@ const getItems = expressAsyncHandler(async (req, res) => {
   });
 
   // delete unmatched cart items
-  await dbProduct.map((product) => {
-    const cartItem = req.user.cart.filter((cart) => {
-      if (cart.item != product._doc._id.toString()) {
-        return cart;
-      }
-    });
-    cartItem.map(async (cart) => {
-      await userModel.findByIdAndUpdate(req.user._id, {
-        $pull: {
-          cart: { item: cart.item },
-        },
-      });
-    });
-  });
+  // await dbProduct.map((product) => {
+  //   const cartItem = req.user.cart.filter((cart) => {
+  //     if (cart.item != product._doc._id.toString()) {
+  //       return cart;
+  //     }
+  //   });
+  //   cartItem.map(async (cart) => {
+  //     await userModel.findByIdAndUpdate(req.user._id, {
+  //       $pull: {
+  //         cart: { item: cart.item },
+  //       },
+  //     });
+  //   });
+  // });
 
   // create new product
   const newProduct = await dbProduct.map((product) => {
@@ -56,7 +56,7 @@ const getItems = expressAsyncHandler(async (req, res) => {
   );
 
   const totalCartAmount = totalCartPrice - totalCartDiscount;
-
+  // send cart obj to front-end
   res.status(200).json({
     cartItems: newProduct,
     itemCount: newProduct.length,
@@ -130,6 +130,22 @@ const removeItem = expressAsyncHandler(async (req, res) => {
   res.status(200).json({ massage: "Product remove from Cart" });
 });
 
+// remove Cart Item
+const getCartItemCount = expressAsyncHandler(async (req, res) => {
+  const userExists = await userModel.findById(req.user._id);
+  if (!userExists) {
+    res.status(400);
+    throw new Error("User not found");
+  }
+  const cartItem = await userExists.cart?.filter((elem) => {
+    if (elem.item === req.params.id) {
+      return elem;
+    }
+  });
+
+  res.status(200).json(cartItem[0]?.count);
+});
+
 // ################################################################
 
-export { getItems, addItem, removeItem };
+export { getItems, addItem, removeItem, getCartItemCount };

@@ -53,12 +53,7 @@ const registerUser = expressAsyncHandler(async (req, res) => {
         // secure : true,
       })
       .json({
-        _id,
-        uname,
-        email,
-        role,
-        image,
-        cart,
+        message: "User registration successfully",
       });
   } else {
     res.status(400);
@@ -91,14 +86,14 @@ const loginUser = expressAsyncHandler(async (req, res) => {
   }
 
   if (userExists && isPasswordMatch) {
-    const { _id, uname, email, role, image, cart } = userExists;
+   
 
     // generate Token
-    const token = generateToken(_id);
+    const token = generateToken(userExists._id);
 
     // Send response and Cookie
     res
-      .status(201)
+      .status(200)
       .cookie("jwtToken", token, {
         path: "/",
         httpOnly: true,
@@ -107,12 +102,7 @@ const loginUser = expressAsyncHandler(async (req, res) => {
         // secure : true,
       })
       .json({
-        _id,
-        uname,
-        email,
-        role,
-        image,
-        cart,
+        message: "User signin successfully",
       });
   } else {
     res.status(400);

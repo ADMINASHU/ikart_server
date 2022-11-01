@@ -9,7 +9,7 @@ const productRouter = express.Router();
 
 import sellerProductRouter from "./sellerProductRoutes.js";
 
-productRouter.get("/getProduct", getAllProduct);
+productRouter.get("/getAllProduct", getAllProduct);
 
 productRouter.get("/getProduct/:id", getProduct);
 

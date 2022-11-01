@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import authRouter from "./router/authRoutes.js";
 import productRouter from "./router/productRoutes.js";
-import kartRouter from "./router/kartRoutes.js";
 import sellerRouter from "./router/sellerRoutes.js";
 import corsOption from "./config/corsOption.js";
 import fileUpload from "express-fileupload";
@@ -41,7 +40,6 @@ app.get("/", (req, res) => {
 // app.use("/public", express.static("public"));
 app.use("/auth", authRouter);
 app.use("/product", productRouter);
-app.use("/kart", kartRouter);
 app.use("/user", userRouter);
 app.use("/seller", sellerRouter);
 
