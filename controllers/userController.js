@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs";
 const getUser = expressAsyncHandler(async (req, res) => {
   const user = await userModel.findById(req.user._id).select("-password");
   if (user) {
-  
     // Send response
     res.status(200).json(user);
   } else {
@@ -29,15 +28,13 @@ const updateUser = expressAsyncHandler(async (req, res) => {
     // update in DB
     const updateUser = await user.save();
 
-    // Send response
-    res.status(200).json({
-      _id: updateUser._id,
-      uname: updateUser.uname,
-      email: updateUser.email,
-      role: updateUser.role,
-      image: updateUser.image,
-      cart: updateUser.cart,
-    });
+    // send response to front-end
+    if (updateUser) {
+      res.status(200).json({ massage: "User update successfully" });
+    } else {
+      res.status(400);
+      throw new Error("User update failed");
+    }
   } else {
     res.status(400);
     throw new Error("User not found");
@@ -66,11 +63,14 @@ const updateUserPassword = expressAsyncHandler(async (req, res) => {
     user.password = newPassword || password;
 
     // update in DB
-    await user.save();
+    const response = await user.save();
     // Send response
-    res.status(200).json({
-      Message: "Password update successfully",
-    });
+    if (response) {
+      res.status(200).json({ massage: "Password update successfully" });
+    } else {
+      res.status(400);
+      throw new Error("Password update failed");
+    }
   } else {
     res.status(400);
     throw new Error("User not found");
