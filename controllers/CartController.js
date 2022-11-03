@@ -130,7 +130,7 @@ const removeItem = expressAsyncHandler(async (req, res) => {
   res.status(200).json({ massage: "Product remove from Cart" });
 });
 
-// remove Cart Item
+// get Cart Item count
 const getCartItemCount = expressAsyncHandler(async (req, res) => {
   const userExists = await userModel.findById(req.user._id);
   if (!userExists) {
@@ -146,6 +146,32 @@ const getCartItemCount = expressAsyncHandler(async (req, res) => {
   res.status(200).json(cartItem[0]?.count);
 });
 
+// get total Cart count
+const getTotalCartCount = expressAsyncHandler(async (req, res) => {
+  const dbProduct = await productModel.find({
+    _id: { $in: req.user.cart.map((item) => item.item) },
+  });
+
+  // create new product
+  const newProduct = await dbProduct.map((product) => {
+    const cartItem = req.user.cart.filter((cart) => {
+      if (cart.item == product._doc._id.toString()) {
+        return cart;
+      }
+    });
+    return {
+      ...product._doc,
+      count: cartItem[0].count,
+    };
+  });
+
+  const cartCount = newProduct.reduce(
+    (partialSum, elem) => partialSum + elem.count,
+    0
+  );
+  res.status(200).json(cartCount);
+});
+
 // ################################################################
 
-export { getItems, addItem, removeItem, getCartItemCount };
+export { getItems, addItem, removeItem, getCartItemCount, getTotalCartCount };
