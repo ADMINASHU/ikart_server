@@ -4,12 +4,15 @@ import {
   getProduct,
   getLimitProduct,
   searchProduct,
+  getCatProduct,
 } from "../controllers/productController.js";
 const productRouter = express.Router();
 
 import sellerProductRouter from "./sellerProductRoutes.js";
 
 productRouter.get("/getAllProduct", getAllProduct);
+
+productRouter.get("/getCatProduct", getCatProduct);
 
 productRouter.get("/getProduct/:id", getProduct);
 
