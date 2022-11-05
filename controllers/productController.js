@@ -21,53 +21,43 @@ const getCatProduct = expressAsyncHandler(async (req, res) => {
     throw new Error("Product not available");
   }
 
+  // program to get a random item from an array
+
+  function randomNoRepeats(array) {
+    var copy = array.slice(0);
+    return function () {
+      if (copy.length < 1) {
+        copy = array.slice(0);
+      }
+      var index = Math.floor(Math.random() * copy.length);
+      var item = copy[index];
+      copy.splice(index, 1);
+      return item;
+    };
+  }
+
   // get unique cat of product @ Array
   const uniqueCatArray = await dbProduct
     .map((product) => product.productCategory)
     .filter((v, i, a) => a.indexOf(v) === i);
 
   // get random product from unique cat Array
+  const catChooser = randomNoRepeats(uniqueCatArray);
+
   const randomCatArray = await uniqueCatArray
-    .map((UPCat, index) => {
-      const rCat =
-        uniqueCatArray[Math.floor(Math.random() * uniqueCatArray.length)];
-      const catIdx = uniqueCatArray.indexOf(rCat);
-      if (catIdx !== -1) {
-        uniqueCatArray.splice(catIdx, 1);
-      }
-      return rCat;
-    })
+    .map(() => catChooser())
     .splice(0, 4);
 
   // get filtered product  Arr from all product Array based on unique cat
-  const ArrOfFilteredProdArray = await randomCatArray.map((cat) =>
-    dbProduct?.filter((product) => product.productCategory === cat)
-  );
-
-  // console.log("randProd", ArrOfFilteredProdArray);
-  // program to get a random item from an array
-
-  function getRandomItem(arr) {
-    // get random index value
-    const randomIndex = Math.floor(Math.random() * arr.length);
-
-    // get random item
-    const item = arr[randomIndex];
-
-    return item;
-  }
-
-  // get random products Arr from filtered prod array
-  const randomProdArray = ArrOfFilteredProdArray.map((ProductArray) => {
-    const res = ProductArray.map((element) => {
-      const get = getRandomItem(ProductArray);
-      return get;
+  const randomProdArray = await randomCatArray
+    .map((cat) =>
+      dbProduct?.filter((product) => product.productCategory === cat)
+    )
+    .map((ProductArray, index) => {
+      const chooser = randomNoRepeats(ProductArray);
+      return ProductArray.map(() => chooser()).splice(0, 4);
     });
-    const finaleRes = res.splice(0, 4);
-    return finaleRes;
-  });
-
-  // send data
+  // await console.log(` random: ${randomProdArray}`);
   res.status(200).json({
     cat: randomCatArray,
     prod: randomProdArray,
