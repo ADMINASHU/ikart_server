@@ -1,6 +1,8 @@
 import expressAsyncHandler from "express-async-handler";
 import userModel from "../modules/userSchema.js";
 import bcrypt from "bcryptjs";
+import uploadImage from "../config/cloudinary.js";
+import clearTempImage from "../services/clearTemp.js";
 
 // get User
 const getUser = expressAsyncHandler(async (req, res) => {
@@ -16,14 +18,25 @@ const getUser = expressAsyncHandler(async (req, res) => {
 
 // update User
 const updateUser = expressAsyncHandler(async (req, res) => {
+ 
+
   const user = await userModel.findById(req.user._id).select("-password");
   if (user) {
-    const { uname, email, role, image } = user;
+    const { uname, email, role, image, gender } = user;
+
+    const file = req.files?.image;
+    if (file) {
+      const uploadResult = await uploadImage(file, "Users");
+      const uploadImageURL = uploadResult?.secure_url;
+      user.image = uploadImageURL || image;
+      clearTempImage(file);
+    }
 
     user.email = email;
     user.uname = req.body?.uname || uname;
-    user.role = req.body?.role || role;
-    user.image = req.body?.image || image;
+    user.gender = req.body?.gender || gender;
+    user.role = role;
+    
 
     // update in DB
     const updateUser = await user.save();

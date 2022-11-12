@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema({
     match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid username"],
     required: [true, "Please add a username"],
   },
+  gender: {
+    type: String,
+    match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid gender"],
+  },
   password: {
     type: String,
     required: [true, "Please add a password"],

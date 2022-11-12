@@ -13,7 +13,6 @@ const getAllProduct = expressAsyncHandler(async (req, res) => {
 });
 
 // get cat Product
-
 const getCatProduct = expressAsyncHandler(async (req, res) => {
   const dbProduct = await productModel.find();
   if (!dbProduct) {
@@ -57,7 +56,6 @@ const getCatProduct = expressAsyncHandler(async (req, res) => {
       const chooser = randomNoRepeats(ProductArray);
       return ProductArray.map(() => chooser()).splice(0, 4);
     });
-  // await console.log(` random: ${randomProdArray}`);
   res.status(200).json({
     cat: randomCatArray,
     prod: randomProdArray,
