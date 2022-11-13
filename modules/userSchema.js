@@ -52,6 +52,11 @@ const userSchema = new mongoose.Schema({
       count: Number,
     },
   ],
+  wishlist: [
+    {
+      item: String,
+    },
+  ],
 });
 
 // Hash password before save
