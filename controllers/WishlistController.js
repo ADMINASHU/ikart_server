@@ -89,7 +89,7 @@ const isItemInWishlist = expressAsyncHandler(async (req, res) => {
       return null;
     }
   });
-  console.log(wishItem);
+  // console.log(wishItem);
   if (wishItem[0]) {
     res.status(200).json(true);
   } else {

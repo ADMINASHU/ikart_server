@@ -7,33 +7,103 @@ const userSchema = new mongoose.Schema({
     match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid username"],
     required: [true, "Please add a username"],
   },
+  lname: {
+    type: String,
+    match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid username"],
+  },
+  name: {
+    type: String,
+  },
   gender: {
     type: String,
     match: [/^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/, "Please enter a valid gender"],
-  },
-  password: {
-    type: String,
-    required: [true, "Please add a password"],
   },
   email: {
     type: String,
     unique: true,
     trim: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      "Please enter a valid email",
-    ],
+    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please enter a valid email"],
     required: [true, "Please add a email"],
   },
+  mobile: {
+    type: Number,
+  },
+  altMobile: {
+    type: Number,
+  },
+  pincode: {
+    type: Number,
+  },
+  locality: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
+  city: {
+    type: String,
+  },
+  state: {
+    type: String,
+  },
+  landmark: {
+    type: String,
+  },
+  addType: {
+    type: String,
+  },
+
   role: {
     type: String,
     default: "User",
   },
+
+  password: {
+    type: String,
+    required: [true, "Please add a password"],
+  },
+
   token: String,
   image: {
     type: String,
-    default:
-      "https://res.cloudinary.com/dc1zhz2bg/image/upload/v1667140385/Users/user_xv7hft.png",
+    default: "https://res.cloudinary.com/dc1zhz2bg/image/upload/v1667140385/Users/user_xv7hft.png",
+  },
+  sellerInfo: {
+    logo: {
+      type: String,
+      default:
+        "https://res.cloudinary.com/dc1zhz2bg/image/upload/v1668523980/Sellers/org-logo_hoxmvt.png",
+    },
+    organization: {
+      type: String,
+    },
+    gstin: {
+      type: String,
+    },
+    pan: {
+      type: String,
+    },
+    email: {
+      type: String,
+    },
+    mobile: { type: Number },
+    pincode: { type: Number },
+    locality: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    landmark: {
+      type: String,
+    },
+    altMobile: { type: Number },
   },
   seller: {
     gstin: String,

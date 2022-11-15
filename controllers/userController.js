@@ -18,11 +18,9 @@ const getUser = expressAsyncHandler(async (req, res) => {
 
 // update User
 const updateUser = expressAsyncHandler(async (req, res) => {
- 
-
   const user = await userModel.findById(req.user._id).select("-password");
   if (user) {
-    const { uname, email, role, image, gender } = user;
+    const { uname, lname, email, role, image, gender } = user;
 
     const file = req.files?.image;
     if (file) {
@@ -34,19 +32,53 @@ const updateUser = expressAsyncHandler(async (req, res) => {
 
     user.email = email;
     user.uname = req.body?.uname || uname;
+    user.lname = req.body?.lname || lname;
     user.gender = req.body?.gender || gender;
     user.role = role;
-    
 
     // update in DB
-    const updateUser = await user.save();
+    const saveUser = await user.save();
 
     // send response to front-end
-    if (updateUser) {
+    if (saveUser) {
       res.status(200).json({ massage: "User update successfully" });
     } else {
       res.status(400);
       throw new Error("User update failed");
+    }
+  } else {
+    res.status(400);
+    throw new Error("User not found");
+  }
+});
+
+// update User Address
+const updateUserAddress = expressAsyncHandler(async (req, res) => {
+  const user = await userModel.findById(req.user._id).select("-password");
+  if (user) {
+    const { name, mobile, pincode, locality, address, city, state, landmark, altMobile, addType } =
+      user;
+
+    user.name = req.body?.name || name;
+    user.mobile = req.body?.mobile || mobile;
+    user.pincode = req.body?.pincode || pincode;
+    user.locality = req.body?.locality || locality;
+    user.address = req.body?.address || address;
+    user.city = req.body?.city || city;
+    user.state = req.body?.state || state;
+    user.landmark = req.body?.landmark || landmark;
+    user.altMobile = req.body?.altMobile || altMobile;
+    user.addType = req.body?.addType || addType;
+
+    // update in DB
+    const saveUser = await user.save();
+
+    // send response to front-end
+    if (saveUser) {
+      res.status(200).json({ massage: "Address update successfully" });
+    } else {
+      res.status(400);
+      throw new Error("Address update failed");
     }
   } else {
     res.status(400);
@@ -110,4 +142,4 @@ const deleteUser = expressAsyncHandler(async (req, res) => {
   }
 });
 
-export { getUser, updateUser, updateUserPassword, deleteUser };
+export { getUser, updateUser, updateUserAddress, updateUserPassword, deleteUser };

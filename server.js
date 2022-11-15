@@ -16,7 +16,6 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-
 // Connect DB
 dbConnect();
 
@@ -28,11 +27,7 @@ app.use(cookieParser());
 app.use(cors(corsOption));
 
 // cloudConfig
-app.use(
-  fileUpload({
-    useTempFiles: true,
-  })
-);
+app.use(fileUpload({ useTempFiles: true }));
 
 // Routes
 app.get("/", (req, res) => {
